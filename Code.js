@@ -633,6 +633,7 @@ function construirContextoCliente(
  * thinkingLevel.
  *******************************************************/
 
+/*
 function llamarGemini(
   prompt,
   thinkingLevel
@@ -786,6 +787,7 @@ function llamarGemini(
     );
   }
 }
+*/
 
 
 /*******************************************************

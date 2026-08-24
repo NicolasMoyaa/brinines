@@ -1,6 +1,7 @@
 # Estado Actual
 
-- Commit: 5a23cd1
-- Etapa 1 completada: Configuración y utilidades extraídas a módulos dedicados.
-- Code.js: Contiene el núcleo funcional pero está siendo vaciado de funciones globales.
+- Commit: f9cd299
+- Etapa 1 completada: Configuración y utilidades extraídas.
+- Etapa 2 completada: Módulo de Clientes extraído.
+- Code.js: Contiene el núcleo funcional (Gemini/Conversaciones) en proceso de extracción.
 - codebackup.gs.js: Obsoleto, debe eliminarse tras completar la migración total.

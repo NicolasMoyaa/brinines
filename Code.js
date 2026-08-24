@@ -298,6 +298,7 @@ function leerTabla(nombreHoja) {
  * BUSCAR CLIENTE
  *******************************************************/
 
+/*
 function buscarCliente(
   identificador
 ) {
@@ -354,6 +355,7 @@ function buscarCliente(
     }
   ) || null;
 }
+*/
 
 
 /*******************************************************
@@ -366,6 +368,7 @@ function buscarCliente(
  * Nunca guardamos dirección.
  *******************************************************/
 
+/*
 function normalizarZona(zona) {
 
   if (!zona) {
@@ -394,12 +397,14 @@ function normalizarZona(zona) {
 
   return "";
 }
+*/
 
 
 /*******************************************************
  * CREAR CLIENTE
  *******************************************************/
 
+/*
 function crearCliente(
   datos
 ) {
@@ -411,14 +416,6 @@ function crearCliente(
 
   const id =
     generarId("CLI");
-
-  /*
-   * IMPORTANTE:
-   * Esta función intenta trabajar
-   * con los encabezados existentes.
-   *
-   * No se agregan direcciones personales.
-   */
 
   const headers =
     sheet
@@ -503,12 +500,14 @@ function crearCliente(
 
   return buscarCliente(id);
 }
+*/
 
 
 /*******************************************************
  * HISTORIAL CLIENTE
  *******************************************************/
 
+/*
 function obtenerHistorialCliente(
   clienteId
 ) {
@@ -547,12 +546,14 @@ function obtenerHistorialCliente(
 
   };
 }
+*/
 
 
 /*******************************************************
  * CONTEXTO DEL CLIENTE
  *******************************************************/
 
+/*
 function construirContextoCliente(
   cliente
 ) {
@@ -613,6 +614,7 @@ function construirContextoCliente(
     historial: historial
   };
 }
+*/
 
 
 /*******************************************************
@@ -1646,6 +1648,7 @@ REGLAS FINALES:
  * ACTUALIZAR CLIENTE
  *******************************************************/
 
+/*
 function actualizarCliente(
   clienteId,
   analisis
@@ -1778,10 +1781,6 @@ function actualizarCliente(
     );
 
 
-  /*
-   * CLIENTE ROMPIÓ EL HIELO
-   */
-
   if (
     analisis.hielo_roto_por_cliente
   ) {
@@ -1808,10 +1807,6 @@ function actualizarCliente(
   }
 
 
-  /*
-   * BRININES ROMPIÓ EL HIELO
-   */
-
   if (
     analisis.hielo_roto_por_brinines
   ) {
@@ -1837,6 +1832,7 @@ function actualizarCliente(
     }
   }
 }
+*/
 
 
 /*******************************************************

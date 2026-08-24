@@ -4,4 +4,6 @@
 - [x] Migración de Gemini (Etapa 3)
 - [x] Migración de Análisis (Etapa 4)
 - [x] Migración de Webhooks (Etapa 5)
-- [ ] Limpieza total de funciones duplicadas y codebackup.gs.js
+- [x] Limpieza total de funciones duplicadas y codebackup.gs.js (Etapa 6)
+- [x] Validación pre-deploy (Etapa 7)
+- [ ] clasp push (requiere autorización)

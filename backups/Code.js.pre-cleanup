@@ -245,7 +245,6 @@ function logSistema(
  * LEER TABLA COMO OBJETOS
  *******************************************************/
 
-/*
 function leerTabla(nombreHoja) {
 
   const sheet =
@@ -291,7 +290,6 @@ function leerTabla(nombreHoja) {
 
     });
 }
-*/
 
 
 /*******************************************************

@@ -21,13 +21,15 @@
  * CONFIGURACIÓN CENTRAL
  *******************************************************/
 
-/*
-// const BRININES = {
+const BRININES = {
 
   timezone: "America/Argentina/Tucuman",
 
   geminiKeyProperty: "GEMINI_KEY",
 
+  // Modelo principal.
+  // Google actualmente ofrece Gemini 3.7 Flash
+  // también dentro del Free Tier.
   modeloPrincipal: "gemini-3.1-flash-lite",
 
   sheets: {
@@ -57,7 +59,6 @@
     logs: "Logs"
   }
 };
-*/
 
 
 /*******************************************************
@@ -245,7 +246,6 @@ function logSistema(
  * LEER TABLA COMO OBJETOS
  *******************************************************/
 
-/*
 function leerTabla(nombreHoja) {
 
   const sheet =
@@ -291,7 +291,6 @@ function leerTabla(nombreHoja) {
 
     });
 }
-*/
 
 
 /*******************************************************

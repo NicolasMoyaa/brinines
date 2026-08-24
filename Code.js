@@ -794,6 +794,7 @@ function llamarGemini(
  * ANALIZAR MENSAJE
  *******************************************************/
 
+/*
 function analizarMensaje(
   mensaje,
   plataforma,
@@ -1644,7 +1645,7 @@ REGLAS FINALES:
     "medium"
   );
 }
-
+*/
 
 /*******************************************************
  * ACTUALIZAR CLIENTE

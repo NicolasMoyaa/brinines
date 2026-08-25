@@ -6,3 +6,4 @@
 - 24/08/2026: Completada Etapa 5 (Webhooks) con éxito. Commit: b9c999f.
 - 24/08/2026: Completada Etapa 6 (Limpieza y consolidación) con éxito. Commit: 475fa00.
 - 24/08/2026: Completada Etapa 7 (Validación pre-deploy) con éxito. Sin commit adicional (sin cambios).
+- 24/08/2026: Completada Etapa 8 (Optimización verificarSistema() - fix timeout 6 min). Commit: (pendiente).

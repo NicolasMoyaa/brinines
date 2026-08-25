@@ -6,4 +6,5 @@
 - [x] Migración de Webhooks (Etapa 5)
 - [x] Limpieza total de funciones duplicadas y codebackup.gs.js (Etapa 6)
 - [x] Validación pre-deploy (Etapa 7)
+- [x] Optimización verificarSistema() (Etapa 8)
 - [ ] clasp push (requiere autorización)

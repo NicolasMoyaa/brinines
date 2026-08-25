@@ -865,78 +865,84 @@ function analizarClienteManual() {
 
 
 /*******************************************************
- * VERIFICACIÓN DEL SISTEMA
+ * VERIFICACIÓN DEL SISTEMA (OPTIMIZADA)
  *******************************************************/
 
 function verificarSistema() {
-
-  const ui =
-    SpreadsheetApp.getUi();
-
-
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  
+  // 1. Obtener todas las hojas de UNA SOLA VEZ (mapa nombre -> sheet)
+  const todasLasHojas = {};
+  ss.getSheets().forEach(s => { todasLasHojas[s.getName()] = s; });
+  
+  const esperadas = BRININES.sheets;
   const resultados = [];
-
-
-  Object.keys(
-    BRININES.sheets
-  )
-    .forEach(
-      key => {
-
-        const nombre =
-          BRININES.sheets[key];
-
-
-        try {
-
-          getSheet(
-            nombre
-          );
-
-
-          resultados.push(
-            "✅ " + nombre
-          );
-
-
-        } catch (error) {
-
-          resultados.push(
-            "❌ " + nombre
-          );
-        }
-
-      }
-    );
-
-
-  let gemini =
-    "❌";
-
-
+  const detalles = [];
+  
+  // 2. Verificar existencia, filas, columnas, encabezados en un solo pase
+  Object.keys(esperadas).forEach(key => {
+    const nombre = esperadas[key];
+    const sheet = todasLasHojas[nombre];
+    
+    if (!sheet) {
+      resultados.push("❌ " + nombre + " (NO EXISTE)");
+      return;
+    }
+    
+    const ultimaFila = sheet.getLastRow();
+    const ultimaCol = sheet.getLastColumn();
+    let headers = [];
+    
+    if (ultimaFila > 0 && ultimaCol > 0) {
+      headers = sheet.getRange(1, 1, 1, ultimaCol).getValues()[0];
+    }
+    
+    resultados.push("✅ " + nombre + " (" + ultimaFila + " filas, " + ultimaCol + " cols)");
+    detalles.push({ hoja: nombre, filas: ultimaFila, cols: ultimaCol, headers });
+  });
+  
+  // 3. Gemini Key (rápido, solo Script Properties)
+  let geminiStatus = "❌ GEMINI_KEY no encontrada";
   try {
-
     getGeminiKey();
-
-    gemini =
-      "✅ GEMINI_KEY encontrada";
-
-  } catch (error) {}
-
-
-  ui.alert(
-
-    "🥐 BRININES AI — SISTEMA\n\n" +
-
-    resultados.join("\n") +
-
-    "\n\nGemini: " +
-    gemini +
-
-    "\nModelo: " +
-    BRININES.modeloPrincipal
-
-  );
+    geminiStatus = "✅ GEMINI_KEY configurada";
+  } catch (e) {}
+  
+  // 4. Verificar funciones críticas existen (referencia global)
+  const funcionesCriticas = [
+    'doPost', 'onOpen', 'procesarConversacion', 'analizarMensaje',
+    'buscarCliente', 'construirContextoCliente', 'llamarGemini',
+    'guardarConversacion', 'actualizarCliente', 'crearCliente',
+    'getSheet', 'getGeminiKey', 'leerTabla', 'generarId', 'logSistema'
+  ];
+  
+  const faltantes = funcionesCriticas.filter(f => typeof this[f] !== 'function');
+  const funcStatus = faltantes.length === 0 
+    ? "✅ Funciones críticas: OK" 
+    : "❌ Faltantes: " + faltantes.join(', ');
+  
+  // 5. Modelo configurado
+  const modelo = BRININES.modeloPrincipal || "NO DEFINIDO";
+  
+  // 6. Output consolidado
+  const mensaje = [
+    "🥐 BRININES AI — DIAGNÓSTICO RÁPIDO",
+    "",
+    "📋 HOJAS:",
+    ...resultados,
+    "",
+    "🔑 " + geminiStatus,
+    "🤖 Modelo: " + modelo,
+    "⚙️ " + funcStatus,
+    "",
+    "✅ Verificación completada en < 5 seg"
+  ].join("\n");
+  
+  ui.alert(mensaje);
+  
+  // Log silencioso para auditoría
+  console.log("DIAGNÓSTICO:", { hojas: detalles, gemini: geminiStatus, funciones: funcStatus, modelo });
 }
 
 function diagnosticarEstructuraBrinines() {

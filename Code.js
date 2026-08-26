@@ -979,3 +979,230 @@ function diagnosticarEstructuraBrinines() {
     "Abrí Ejecuciones > Registros para ver la estructura."
   );
 }
+
+
+/*******************************************************
+ * PRUEBAS DE VALIDACIÓN - 10 CASOS
+ *******************************************************/
+
+function ejecutarPruebasValidacion() {
+  const pruebas = [
+    "Hola, quiero los de siempre",
+    "Nunca probé los budines, cuál me recomendás?",
+    "Hola! Cómo están? 😊 Quería consultar qué sabores tienen disponibles.",
+    "Hola! Quiero pedir de nuevo, me encantaron los budines 😍",
+    "Cuánto sale el de chocolate?",
+    "Tenés de limón?",
+    "Quiero 3 de chocolate y 2 de limón",
+    "Cuánto sale el envío?",
+    "Quiero pedir para mañana",
+    "No me gustaron, estaban secos"
+  ];
+
+  const identificador = "usuario_prueba_validacion";
+  const plataforma = "validacion";
+
+  const resultados = [];
+  let exitosas = 0;
+  let fallidas = 0;
+  const errores = [];
+
+  for (let i = 0; i < pruebas.length; i++) {
+    const numPrueba = i + 1;
+    const mensaje = pruebas[i];
+
+    try {
+      const resultado = procesarConversacion(mensaje, plataforma, identificador);
+      const analisis = resultado.analisis;
+
+      const registro = {
+        prueba: numPrueba,
+        mensaje: mensaje,
+        analisis_completo: analisis,
+        respuesta_sugerida: analisis.respuesta_sugerida || "",
+        intencion: analisis.intencion || "",
+        etapa_venta: analisis.etapa_venta || "",
+        temperatura: analisis.temperatura || "",
+        nivel_confianza: analisis.nivel_confianza || "",
+        estilo_detectado: analisis.estilo_detectado || "",
+        directo_score: analisis.directo_score || 0,
+        cordialidad_score: analisis.cordialidad_score || 0,
+        informalidad_score: analisis.informalidad_score || 0,
+        humor_score: analisis.humor_score || 0,
+        necesita_guia_score: analisis.necesita_guia_score || 0,
+        preferencia_longitud: analisis.preferencia_longitud || "",
+        preferencia_emojis: analisis.preferencia_emojis || "",
+        hielo_roto_por_cliente: analisis.hielo_roto_por_cliente || false,
+        hielo_roto_por_brinines: analisis.hielo_roto_por_brinines || false,
+        es_pedido: analisis.es_pedido || false,
+        resumen_interno: analisis.resumen_interno || "",
+        status: "OK"
+      };
+
+      resultados.push(registro);
+      exitosas++;
+
+      Logger.log(`PRUEBA ${numPrueba}/10 ✅`);
+      Logger.log(`Mensaje: ${mensaje}`);
+      Logger.log(`Intención: ${analisis.intencion}`);
+      Logger.log(`Confianza: ${analisis.nivel_confianza}`);
+      Logger.log(`Respuesta: ${analisis.respuesta_sugerida}`);
+      Logger.log("---");
+
+    } catch (error) {
+      const registro = {
+        prueba: numPrueba,
+        mensaje: mensaje,
+        error: error.toString(),
+        status: "ERROR"
+      };
+      resultados.push(registro);
+      fallidas++;
+      errores.push({ prueba: numPrueba, mensaje, error: error.toString() });
+
+      Logger.log(`PRUEBA ${numPrueba}/10 ❌`);
+      Logger.log(`Mensaje: ${mensaje}`);
+      Logger.log(`Error: ${error.toString()}`);
+      Logger.log("---");
+    }
+  }
+
+  const fecha = new Date();
+  const timestamp = Utilities.formatDate(fecha, Session.getScriptTimeZone(), "yyyy-MM-dd_HH-mm-ss");
+
+  const resumenFinal = {
+    fecha_ejecucion: timestamp,
+    modelo: BRININES.modeloPrincipal,
+    total_pruebas: pruebas.length,
+    exitosas: exitosas,
+    fallidas: fallidas,
+    tasa_exito: ((exitosas / pruebas.length) * 100).toFixed(1) + "%",
+    resultados: resultados,
+    errores: errores,
+    patrones_problematicos: detectarPatronesProblemas(resultados)
+  };
+
+  Logger.log("========================================");
+  Logger.log("RESUMEN FINAL DE PRUEBAS DE VALIDACIÓN");
+  Logger.log("========================================");
+  Logger.log(`Fecha: ${timestamp}`);
+  Logger.log(`Modelo: ${BRININES.modeloPrincipal}`);
+  Logger.log(`Total: ${pruebas.length}`);
+  Logger.log(`Exitosas: ${exitosas}`);
+  Logger.log(`Fallidas: ${fallidas}`);
+  Logger.log(`Tasa de éxito: ${resumenFinal.tasa_exito}`);
+  Logger.log("========================================");
+
+  guardarResultadosPruebas(resumenFinal);
+
+  return resumenFinal;
+}
+
+function detectarPatronesProblemas(resultados) {
+  const patrones = [];
+
+  const fallidas = resultados.filter(r => r.status === "ERROR");
+  if (fallidas.length > 0) {
+    patrones.push(`${fallidas.length} prueba(s) fallaron con errores de ejecución`);
+  }
+
+  const sinIntencion = resultados.filter(r => r.status === "OK" && !r.intencion);
+  if (sinIntencion.length > 0) {
+    patrones.push(`${sinIntencion.length} prueba(s) sin intención detectada`);
+  }
+
+  const bajaConfianza = resultados.filter(r => r.status === "OK" && r.nivel_confianza === "BAJO");
+  if (bajaConfianza.length > 0) {
+    patrones.push(`${bajaConfianza.length} prueba(s) con confianza BAJA`);
+  }
+
+  const sinRespuesta = resultados.filter(r => r.status === "OK" && !r.respuesta_sugerida);
+  if (sinRespuesta.length > 0) {
+    patrones.push(`${sinRespuesta.length} prueba(s) sin respuesta sugerida`);
+  }
+
+  const hieloRotoIncorrecto = resultados.filter(r =>
+    r.status === "OK" &&
+    r.hielo_roto_por_cliente === true &&
+    !["Hola, quiero los de siempre", "Hola! Quiero pedir de nuevo, me encantaron los budines 😍"].includes(r.mensaje)
+  );
+  if (hieloRotoIncorrecto.length > 0) {
+    patrones.push(`${hieloRotoIncorrecto.length} prueba(s) con hielo_roto_por_cliente=true en casos sin continuidad clara`);
+  }
+
+  return patrones.length > 0 ? patrones : ["No se detectaron patrones problemáticos significativos"];
+}
+
+function guardarResultadosPruebas(resumen) {
+  const sheetName = "Resultados_Pruebas";
+  let sheet;
+  try {
+    sheet = getSheet(sheetName);
+  } catch (e) {
+    const ss = getSS();
+    sheet = ss.insertSheet(sheetName);
+    const headers = [
+      "Timestamp", "Prueba", "Mensaje", "Status", "Intencion", "Etapa_Venta",
+      "Temperatura", "Nivel_Confianza", "Estilo", "Respuesta_Sugerida",
+      "Directo_Score", "Cordialidad_Score", "Informalidad_Score", "Humor_Score",
+      "Necesita_Guia_Score", "Pref_Longitud", "Pref_Emojis",
+      "Hielo_Roto_Cliente", "Hielo_Roto_Brinines", "Es_Pedido", "Resumen_Interno", "Error"
+    ];
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    sheet.setFrozenRows(1);
+  }
+
+  const timestamp = resumen.fecha_ejecucion;
+  const rows = resumen.resultados.map(r => [
+    timestamp,
+    r.prueba,
+    r.mensaje,
+    r.status,
+    r.intencion || "",
+    r.etapa_venta || "",
+    r.temperatura || "",
+    r.nivel_confianza || "",
+    r.estilo_detectado || "",
+    r.respuesta_sugerida || "",
+    r.directo_score || 0,
+    r.cordialidad_score || 0,
+    r.informalidad_score || 0,
+    r.humor_score || 0,
+    r.necesita_guia_score || 0,
+    r.preferencia_longitud || "",
+    r.preferencia_emojis || "",
+    r.hielo_roto_por_cliente ? "SI" : "NO",
+    r.hielo_roto_por_brinines ? "SI" : "NO",
+    r.es_pedido ? "SI" : "NO",
+    r.resumen_interno || "",
+    r.error || ""
+  ]);
+
+  if (rows.length > 0) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+  }
+
+  const resumenSheetName = "Resumen_Pruebas";
+  let resumenSheet;
+  try {
+    resumenSheet = getSheet(resumenSheetName);
+  } catch (e) {
+    const ss = getSS();
+    resumenSheet = ss.insertSheet(resumenSheetName);
+    const resumenHeaders = ["Timestamp", "Modelo", "Total", "Exitosas", "Fallidas", "Tasa_Exito", "Patrones"];
+    resumenSheet.getRange(1, 1, 1, resumenHeaders.length).setValues([resumenHeaders]);
+    resumenSheet.setFrozenRows(1);
+  }
+
+  resumenSheet.getRange(resumenSheet.getLastRow() + 1, 1, 1, 7).setValues([[
+    timestamp,
+    resumen.modelo,
+    resumen.total_pruebas,
+    resumen.exitosas,
+    resumen.fallidas,
+    resumen.tasa_exito,
+    resumen.patrones_problematicos.join("; ")
+  ]]);
+
+  Logger.log(`Resultados guardados en hoja "${sheetName}" y resumen en "${resumenSheetName}"`);
+}

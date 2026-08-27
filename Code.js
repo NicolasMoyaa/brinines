@@ -242,24 +242,70 @@ function procesarConversacion(
 
 
     /*
-     * Analizar mensaje.
+     * Obtener contexto comercial actual (snapshot desde Sheets con cache).
+     */
+
+    const contextoComercial = obtenerContextoComercial();
+
+
+    /*
+     * Analizar mensaje con contexto comercial inyectado.
      */
 
     const analisis =
       analizarMensaje(
         mensaje,
         plataforma,
-        identificador
+        identificador,
+        contextoComercial
       );
 
 
     /*
-     * Actualizar memoria.
+     * Normalizar zona mencionada por el cliente.
      */
 
+    let zonaNormalizada = null;
+    if (analisis.zona_mencionada) {
+      zonaNormalizada = normalizarZonaComercial(analisis.zona_mencionada);
+    }
+
+
+    /*
+     * Calcular pedido si corresponde.
+     */
+
+    let calculoPedido = null;
+    let respuestaFinal = analisis.respuesta_sugerida || "";
+
+    if (analisis.es_pedido && analisis.productos_detectados && analisis.productos_detectados.length > 0) {
+      try {
+        const ctxParaCalculo = {
+          ...contextoComercial,
+          cliente: { zona: zonaNormalizada || cliente.Zona_Cliente || "CENTRO" }
+        };
+        calculoPedido = calcularPedidoCompleto(analisis, ctxParaCalculo, contextoComercial.productos);
+
+        // Construir respuesta final con totales reales
+        respuestaFinal = construirRespuestaPedido(calculoPedido, contextoComercial.pagos);
+      } catch (errorCalc) {
+        logSistema("CALCULO_PEDIDO", "ERROR", cliente.Cliente_ID, errorCalc.toString(), "CORE");
+        respuestaFinal = "Hubo un problema calculando tu pedido. " + errorCalc.toString();
+      }
+    }
+
+
+    /*
+     * Actualizar memoria del cliente (incluye zona normalizada si se detectó).
+     */
+
+    const analisisParaGuardar = { ...analisis };
+    if (zonaNormalizada) {
+      analisisParaGuardar.zona_normalizada = zonaNormalizada;
+    }
     actualizarCliente(
       cliente.Cliente_ID,
-      analisis
+      analisisParaGuardar
     );
 
 
@@ -282,7 +328,7 @@ function procesarConversacion(
         mensaje,
 
       respuesta_agente:
-        analisis.respuesta_sugerida || "",
+        respuestaFinal,
 
       intencion:
         analisis.intencion,
@@ -308,6 +354,15 @@ function procesarConversacion(
     });
 
 
+    /*
+     * Guardar pedido si se calculó.
+     */
+
+    if (calculoPedido) {
+      guardarPedido(cliente.Cliente_ID, calculoPedido, analisis, zonaNormalizada, analisis.medio_pago_mencionado);
+    }
+
+
     logSistema(
 
       "PROCESAR_CONVERSACION",
@@ -316,9 +371,10 @@ function procesarConversacion(
 
       cliente.Cliente_ID,
 
-      JSON.stringify(
-        analisis
-      ),
+      JSON.stringify({
+        analisis: analisis,
+        calculo_pedido: calculoPedido
+      }),
 
       "CORE"
 
@@ -333,7 +389,13 @@ function procesarConversacion(
         cliente.Cliente_ID,
 
       analisis:
-        analisis
+        analisis,
+
+      calculo_pedido:
+        calculoPedido,
+
+      respuesta_final:
+        respuestaFinal
 
     };
 
@@ -355,6 +417,86 @@ function procesarConversacion(
     );
 
     throw error;
+  }
+}
+
+function construirRespuestaPedido(calculo, pagosDisponibles) {
+  const lines = [];
+  lines.push("¡Dale! 😊 Te armé el pedido:");
+  
+  calculo.items.forEach(item => {
+    const subtotalItem = item.precio * item.cantidad;
+    lines.push(item.cantidad + " x " + item.sabor + " ($" + item.precio.toLocaleString() + ") = $" + subtotalItem.toLocaleString());
+  });
+  
+  lines.push("Subtotal: $" + calculo.subtotal.toLocaleString());
+  
+  if (calculo.envio.costo > 0) {
+    lines.push("Envío " + calculo.envio.zona + ": $" + calculo.envio.costo.toLocaleString());
+  } else if (calculo.envio.gratis) {
+    lines.push("Envío " + calculo.envio.zona + ": GRATIS 🎉");
+  }
+  
+  if (calculo.descuento_total > 0) {
+    lines.push("Descuentos: -$" + calculo.descuento_total.toLocaleString());
+    calculo.promociones.forEach(p => lines.push("  - " + p.nombre + ": -$" + p.descuento.toLocaleString()));
+  }
+  
+  lines.push("────────────────────────");
+  lines.push("Total: $" + calculo.total.toLocaleString());
+  
+  const mediosActivos = (pagosDisponibles || []).filter(p => p.disponible).map(p => p.medio);
+  if (mediosActivos.length > 0) {
+    lines.push("");
+    lines.push("¿Cómo querés abonar? " + mediosActivos.join(" o "));
+  }
+  
+  return lines.join("\n");
+}
+
+function guardarPedido(clienteId, calculo, analisis, zonaNormalizada, medioPagoMencionado) {
+  try {
+    const sheet = getSheet(BRININES.sheets.pedidos);
+    const headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    
+    const itemsJson = JSON.stringify(calculo.items.map(i => ({
+      producto_id: i.producto_id,
+      sabor: i.sabor,
+      cantidad: i.cantidad,
+      precio_unitario: i.precio,
+      subtotal: i.precio * i.cantidad
+    })));
+    
+    const promoJson = JSON.stringify(calculo.promociones.map(p => ({
+      id: p.id,
+      nombre: p.nombre,
+      descuento: p.descuento
+    })));
+    
+    const fila = headers.map(header => {
+      switch (header) {
+        case "Pedido_ID": return generarId("PED");
+        case "Cliente_ID": return clienteId;
+        case "Fecha_Hora": return ahora();
+        case "Items_JSON": return itemsJson;
+        case "Subtotal": return calculo.subtotal;
+        case "Envio_Zona": return calculo.envio.zona;
+        case "Envio_Costo": return calculo.envio.costo;
+        case "Descuento_Promos": return calculo.descuento_total;
+        case "Total": return calculo.total;
+        case "Medio_Pago": return medioPagoMencionado || "";
+        case "Estado": return "CONFIRMADO";
+        case "Tipo_Entrega": return calculo.envio.costo > 0 ? "ENVIO" : "RETIRO";
+        case "Notas": return "Promos: " + promoJson;
+        default: return "";
+      }
+    });
+    
+    sheet.appendRow(fila);
+    logSistema("GUARDAR_PEDIDO", "OK", clienteId, "Total: " + calculo.total, "CORE");
+  } catch (e) {
+    logSistema("GUARDAR_PEDIDO", "ERROR", clienteId, e.toString(), "CORE");
+    throw e;
   }
 }
 

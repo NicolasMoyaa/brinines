@@ -2,9 +2,40 @@
  * ANÁLISIS CONVERSACIONAL
  *******************************************************/
 
-function analizarMensaje(mensaje, plataforma, identificador) {
+function analizarMensaje(mensaje, plataforma, identificador, contextoComercial) {
   const cliente = buscarCliente(identificador, plataforma);
-  const contexto = construirContextoCliente(cliente);
+  const contextoCliente = construirContextoCliente(cliente);
+  
+  const productosDisponibles = (contextoComercial?.productos || []).map(p => ({
+    sabor: p.sabor,
+    precio: p.precio,
+    stock: p.stock,
+    categoria: p.categoria,
+    disponible: p.disponible
+  }));
+  
+  const enviosDisponibles = (contextoComercial?.envios || []).map(e => ({
+    zona: e.zona,
+    costo: e.costo,
+    tiempo: e.tiempo,
+    minimoGratis: e.minimoGratis
+  }));
+  
+  const pagosDisponibles = (contextoComercial?.pagos || []).map(p => ({
+    medio: p.medio,
+    comision: p.comision,
+    instrucciones: p.instrucciones
+  }));
+  
+  const promocionesVigentes = (contextoComercial?.promociones || []).map(p => ({
+    nombre: p.nombre,
+    tipo: p.tipo,
+    valor: p.valor,
+    condicion: p.condicion
+  }));
+  
+  const configComercial = contextoComercial?.config || {};
+
   const prompt = `
 Sos el MOTOR DE ANÁLISIS CONVERSACIONAL
 de Brinines Panadería.
@@ -98,6 +129,7 @@ PRIVACIDAD
 
     CENTRO
     FUERA_CENTRO
+    OTRA_<ZONA_NORMALIZADA>
 
 20. Nunca mencionar la zona al cliente
     como técnica comercial.
@@ -663,6 +695,25 @@ es más importante que forzar una venta.
 
 
 ==================================================
+CONTEXTO COMERCIAL ACTUAL (DATOS REALES - NO INVENTAR)
+==================================================
+
+PRODUCTOS DISPONIBLES:
+${JSON.stringify(productosDisponibles, null, 2)}
+
+ENVIOS DISPONIBLES:
+${JSON.stringify(enviosDisponibles, null, 2)}
+
+MEDIOS DE PAGO DISPONIBLES:
+${JSON.stringify(pagosDisponibles, null, 2)}
+
+PROMOCIONES VIGENTES:
+${JSON.stringify(promocionesVigentes, null, 2)}
+
+CONFIG GENERAL:
+${JSON.stringify(configComercial, null, 2)}
+
+==================================================
 DATOS DISPONIBLES
 ==================================================
 
@@ -680,7 +731,7 @@ ${identificador}
 
 CONTEXTO DEL CLIENTE:
 
-${JSON.stringify(contexto)}
+${JSON.stringify(contextoCliente)}
 
 
 ==================================================
@@ -781,7 +832,11 @@ El JSON debe tener exactamente esta estructura:
 
   "resumen_interno": "",
 
-  "respuesta_sugerida": ""
+  "respuesta_sugerida": "",
+
+  "productos_detectados": [],
+  "zona_mencionada": "",
+  "medio_pago_mencionado": ""
 }
 
 
@@ -827,6 +882,16 @@ REGLAS FINALES:
 
 15. La respuesta sugerida debe ser
     natural y proporcional al contexto.
+
+16. EXTRAER productos_detectados: array de {sabor, cantidad} cuando el cliente mencione productos y cantidades.
+
+17. EXTRAER zona_mencionada: texto tal como lo escriba el cliente (ej: "Las Talitas", "Centro", "Fuera del centro").
+
+18. EXTRAER medio_pago_mencionado: "EFECTIVO" | "TRANSFERENCIA" | null según lo que mencione el cliente.
+
+19. NO normalizar la zona aquí. El backend la normalizará a CENTRO/FUERA_CENTRO/OTRA_*.
+
+20. NO calcular precios, totales, envíos ni promociones. Eso lo hace el sistema determinísticamente.
 `;
 
   return llamarGemini(prompt, "medium");

@@ -1,9 +1,13 @@
 # Estado Actual
 
-- Commit: 0883478 (auditoría final - nuevas hojas en config, funciones críticas actualizadas)
-- Arquitectura modular base completada (Etapas 1-8 previas)
-- **IMPLEMENTACIÓN AUTÓNOMA COMPLETADA**: Arquitectura de Datos Volátiles (Etapas 0-11)
-- Code.js: Núcleo funcional + UI/tests + ejecutarPruebasValidacion() + orquestación pedidos completa
-- codebackup.gs.js: Eliminado
-- Validación estática: PASS
-- **ESTADO FINAL**: Todas las etapas 0-11 completadas. Pendiente ETAPA 12 (ENGRAM + Repo Final)
+- Commit base: 970b313
+- Fixes realizados en esta sesión:
+  * normalizarZonaComercial(): corregido OTRA_OTRA_, guiones, dobles underscores, prefijo OTRA
+  * Tests de promociones: expectativas actualizadas a 3785 (stacking) y 11150 (stacking)
+  * Test de stock: expectativa corregida a ok === false (stock insuficiente real)
+  * itemsSubtotal: agregados campos producto_id
+- Arquitectura modular: 7 módulos .gs + Code.js
+- Estado: READY_FOR_MANUAL_VALIDATION
+- Sin clasp push a producción
+- GEMINI_KEY en Script Properties (seguro)
+- Sin secretos en código

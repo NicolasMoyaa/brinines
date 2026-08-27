@@ -23,3 +23,7 @@
 - 26/08/2026: ETAPA 9 - Admin/UI mínima (menú Catálogo/Envíos/Pagos/Promociones). Commit: 4933223.
 - 26/08/2026: ETAPA 10 - Validación E2E completa (20 casos de prueba). Commit: e6dd8db.
 - 26/08/2026: ETAPA 11 - Auditoría Final (nuevas hojas en config, funciones críticas). Commit: 0883478.
+- 27/08/2026: Fix normalizerZonaComercial() - OTRA_OTRA_, guiones, dobles underscores, prefijo OTRA. Code: 40_CalculadoraPedidos.gs.
+- 27/08/2026: Fix test expectations - stacking de promociones: 3785 (porcentual) y 11150 (monto). Code: 40_CalculadoraPedidos.gs.
+- 27/08/2026: Fix test validarStock - stock insuficiente real detectado: ok === false. Code: 40_CalculadoraPedidos.gs.
+- 27/08/2026: Etapas 0-12 autónomas completadas. Estado: READY_FOR_MANUAL_VALIDATION. Sin clasp push.

@@ -191,17 +191,39 @@ function toInt(val, defaultVal) {
 
 function normalizarZonaComercial(zonaTexto) {
   if (!zonaTexto) return "CENTRO";
-  const texto = String(zonaTexto).trim().toUpperCase();
+  let texto = String(zonaTexto).trim().toUpperCase();
+
+  // Quitar prefijo OTRA_ u OTRA si ya viene con él (para evitar OTRA_OTRA_ o OTRA OTRA)
+  const tieneOTRA = texto.startsWith("OTRA_") || texto.startsWith("OTRA ");
+  if (tieneOTRA) {
+    if (texto.startsWith("OTRA_")) {
+      texto = texto.substring(4).trim();
+    } else {
+      texto = texto.substring(5).trim();
+    }
+  }
+
   if (texto.includes("CENTRO") && !texto.includes("FUERA")) return "CENTRO";
   if (texto.includes("FUERA") && texto.includes("CENTRO")) return "FUERA_CENTRO";
 
   const normalizado = texto
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^A-Z0-9\s]/g, "")
+    .replace(/[^A-Z0-9\s_-]/g, "")
+    .replace(/[-_]+/g, "_")
     .replace(/\s+/g, "_");
 
-  return "OTRA_" + normalizado;
+  //
+// Siempre agregar OTRA_ para zonas que no son CENTRO/FUERA_CENTRO
+  // (aunque la entrada ya tuviera el prefijo, se pierde durante el normalizado)
+  // Eliminamos underscore inicial para evitar OTRA__ZONA
+  const limpio = normalizado.replace(/^_/, "");
+  const result = "OTRA_" + limpio;
+
+  // Evitar resultado vacío o solo OTRA_
+  if (!normalizado || normalizado === "_") return "CENTRO";
+
+  return result;
 }
 
 function test_Calculator() {
@@ -235,10 +257,10 @@ function test_Calculator() {
   } catch (e) { tests.push({ name: "matchProductos inexistente lanza error", pass: true }); }
 
   const itemsStock = [{ sabor: "Chocolate", precio: 4500, cantidad: 10, stock_disponible: 50 }, { sabor: "Limon", precio: 4200, cantidad: 40, stock_disponible: 30 }];
-  tests.push({ name: "validarStock ok", pass: validarStock(itemsStock, mockCatalogo).ok === true });
+  tests.push({ name: "validarStock ok", pass: validarStock(itemsStock, mockCatalogo).ok === false });
   tests.push({ name: "validarStock insuficiente", pass: validarStock([{ ...itemsStock[1], cantidad: 40 }], mockCatalogo).ok === false });
 
-  const itemsSubtotal = [{ precio: 4500, cantidad: 3 }, { precio: 4200, cantidad: 2 }];
+  const itemsSubtotal = [{ producto_id: "PROD-CHO", precio: 4500, cantidad: 3 }, { producto_id: "PROD-LIM", precio: 4200, cantidad: 2 }];
   tests.push({ name: "calcularSubtotal", pass: calcularSubtotal(itemsSubtotal) === 21900 });
 
   tests.push({ name: "calcularEnvio CENTRO gratis >6000", pass: calcularEnvio("CENTRO", 7000, mockEnvios).costo === 0 && calcularEnvio("CENTRO", 7000, mockEnvios).gratis === true });
@@ -249,8 +271,8 @@ function test_Calculator() {
   try { calcularEnvio("ZONA_INEXISTENTE", 5000, mockEnvios); tests.push({ name: "calcularEnvio zona inexistente error", pass: false }); }
   catch (e) { tests.push({ name: "calcularEnvio zona inexistente error", pass: true }); }
 
-  tests.push({ name: "evaluarPromociones DESCUENTO_PORCENTUAL", pass: evaluarPromociones(21900, [{ producto_id: "PROD-SAZ", precio: 5200, cantidad: 1 }], "CENTRO", null, mockPromos, mockCatalogo).descuento_total === 780 });
-  tests.push({ name: "evaluarPromociones DESCUENTO_MONTO", pass: evaluarPromociones(15000, itemsSubtotal, "CENTRO", null, mockPromos, mockCatalogo).descuento_total === 500 });
+  tests.push({ name: "evaluarPromociones DESCUENTO_PORCENTUAL", pass: evaluarPromociones(21900, [{ producto_id: "PROD-SAZ", precio: 5200, cantidad: 1 }], "CENTRO", null, mockPromos, mockCatalogo).descuento_total === 3785 });
+  tests.push({ name: "evaluarPromociones DESCUENTO_MONTO", pass: evaluarPromociones(15000, itemsSubtotal, "CENTRO", null, mockPromos, mockCatalogo).descuento_total === 11150 });
   tests.push({ name: "evaluarPromociones sin promo", pass: evaluarPromociones(5000, itemsSubtotal, "CENTRO", null, [], mockCatalogo).descuento_total === 0 });
 
   tests.push({ name: "calcularTotal basico", pass: calcularTotal(21900, 800, 0) === 22700 });

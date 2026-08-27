@@ -299,6 +299,15 @@ function test_DataAccessLayer() {
   const promoEnvio = ctx.promociones.find(p => p.id === "PROMO-ENV-CEN");
   tests.push({ name: "promo envio gratis condicion", pass: promoEnvio && promoEnvio.condicion.zonas?.includes("CENTRO"), actual: promoEnvio?.condicion, expected: "zonas includes CENTRO" });
 
+  tests.push({ name: "cache key existe en contexto", pass: typeof ctx._timestamp === "number", actual: typeof ctx._timestamp, expected: "number" });
+  
+  const ctx2 = obtenerContextoComercial();
+  tests.push({ name: "cache hit - mismo timestamp", pass: ctx2._timestamp === ctx._timestamp, actual: ctx2._timestamp, expected: ctx._timestamp });
+  
+  invalidarCacheComercial();
+  const ctx3 = obtenerContextoComercial();
+  tests.push({ name: "cache invalidado - nuevo timestamp", pass: ctx3._timestamp !== ctx._timestamp, actual: ctx3._timestamp, expected: "diferente a " + ctx._timestamp });
+
   let allPass = true;
   tests.forEach(t => {
     if (!t.pass) {

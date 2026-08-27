@@ -12,3 +12,14 @@
 - 26/08/2026: Usuario intenta ejecutar manualmente desde editor Apps Script pero no ve `ejecutarPruebasValidacion` en dropdown. Función existe en Code.js:983 y fue pusheada. Posible: editor requiere refresh (F5) o acceso via "Ejecutar > Función > ejecutarPruebasValidacion". Quedó pendiente para mañana.
 - 26/08/2026: Fix guardarResultadosPruebas() columns mismatch. Commit: 941a6da.
 - 26/08/2026: **INICIO IMPLEMENTACIÓN AUTÓNOMA** - Arquitectura de Datos Volátiles completa (ETAPAS 0-12).
+- 26/08/2026: ETAPA 1 - Data Access Layer (20_DatosComerciales.gs). Commit: 910b907.
+- 26/08/2026: ETAPA 2 - Calculator (40_CalculadoraPedidos.gs). Commit: b1ff4de.
+- 26/08/2026: ETAPA 3 - Sheets + Mock Data (setupMockDataComercial en 20_DatosComerciales.gs).
+- 26/08/2026: ETAPA 4 - Integración Gemini (Code.js + 31_AnalisisConversacional.gs). Commit: a9aded4.
+- 26/08/2026: ETAPA 5 - Orquestación Pedidos (guardarPedido + integración completa).
+- 26/08/2026: ETAPA 6 - Sistema Zonas OTRA_* (normalizarZonaComercial + integración). Commit: b9430bb.
+- 26/08/2026: ETAPA 7 - Pagos (EFECTIVO/TRANSFERENCIA activos únicamente). Commit: 47277a7.
+- 26/08/2026: ETAPA 8 - Cache (CacheService + invalidación). Commit: cfb054d.
+- 26/08/2026: ETAPA 9 - Admin/UI mínima (menú Catálogo/Envíos/Pagos/Promociones). Commit: 4933223.
+- 26/08/2026: ETAPA 10 - Validación E2E completa (20 casos de prueba). Commit: e6dd8db.
+- 26/08/2026: ETAPA 11 - Auditoría Final (nuevas hojas en config, funciones críticas). Commit: 0883478.

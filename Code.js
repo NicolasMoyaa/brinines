@@ -1169,7 +1169,17 @@ function ejecutarPruebasValidacion() {
     "Quiero 3 de chocolate y 2 de limón",
     "Cuánto sale el envío?",
     "Quiero pedir para mañana",
-    "No me gustaron, estaban secos"
+    "No me gustaron, estaban secos",
+    "Quiero 3 de chocolate y 2 de limón",
+    "Quiero 3 de chocolate y 2 de limón, zona Las Talitas",
+    "Quiero 3 de chocolate y 2 de limón, zona Centro",
+    "Quiero 1 de sin azúcar",
+    "Quiero 100 de chocolate",
+    "Estoy en Las Talitas",
+    "OTRA Las Talitas",
+    "Quiero pagar por MercadoPago",
+    "Quiero pagar por transferencia",
+    "Quiero pagar en efectivo"
   ];
 
   const identificador = "usuario_prueba_validacion";
@@ -1301,6 +1311,57 @@ function detectarPatronesProblemas(resultados) {
   );
   if (hieloRotoIncorrecto.length > 0) {
     patrones.push(`${hieloRotoIncorrecto.length} prueba(s) con hielo_roto_por_cliente=true en casos sin continuidad clara`);
+  }
+
+  const pruebasPedido = resultados.filter(r => r.status === "OK" && r.prueba >= 11 && r.prueba <= 15);
+  const pedidoSinCalculo = pruebasPedido.filter(r => !r.analisis_completo?.calculo_pedido);
+  if (pedidoSinCalculo.length > 0) {
+    patrones.push(`${pedidoSinCalculo.length} prueba(s) de pedido sin cálculo determinístico`);
+  }
+
+  const zonaTalitas = resultados.find(r => r.prueba === 12);
+  if (zonaTalitas && zonaTalitas.analisis_completo?.zona_mencionada === "Las Talitas" && zonaTalitas.analisis_completo?.zona_normalizada !== "OTRA_LAS_TALITAS") {
+    patrones.push("Prueba 12: zona Las Talitas no normalizada a OTRA_LAS_TALITAS");
+  }
+
+  const zonaCentro = resultados.find(r => r.prueba === 13);
+  if (zonaCentro && zonaCentro.analisis_completo?.zona_mencionada === "Centro" && zonaCentro.analisis_completo?.zona_normalizada !== "CENTRO") {
+    patrones.push("Prueba 13: zona Centro no normalizada a CENTRO");
+  }
+
+  const promoSinAzucar = resultados.find(r => r.prueba === 14);
+  if (promoSinAzucar && promoSinAzucar.analisis_completo?.calculo_pedido?.descuento_total === 0) {
+    patrones.push("Prueba 14: promo Sin Azúcar 15% no aplicada");
+  }
+
+  const stockInsuficiente = resultados.find(r => r.prueba === 15);
+  if (stockInsuficiente && stockInsuficiente.status === "OK") {
+    patrones.push("Prueba 15: debería fallar por stock insuficiente (100 chocolate, stock=50)");
+  }
+
+  const zonaDetectada = resultados.find(r => r.prueba === 16);
+  if (zonaDetectada && zonaDetectada.analisis_completo?.zona_normalizada !== "OTRA_LAS_TALITAS") {
+    patrones.push("Prueba 16: 'Estoy en Las Talitas' no normalizó a OTRA_LAS_TALITAS");
+  }
+
+  const ctaOtra = resultados.find(r => r.prueba === 17);
+  if (ctaOtra && ctaOtra.analisis_completo?.zona_normalizada !== "OTRA_LAS_TALITAS") {
+    patrones.push("Prueba 17: selección OTRA + 'Las Talitas' no normalizó a OTRA_LAS_TALITAS");
+  }
+
+  const mpInactivo = resultados.find(r => r.prueba === 18);
+  if (mpInactivo && mpInactivo.analisis_completo?.medio_pago_mencionado === "MERCADOPAGO") {
+    patrones.push("Prueba 18: MercadoPago no debería ser ofrecido (inactivo)");
+  }
+
+  const transferencia = resultados.find(r => r.prueba === 19);
+  if (transferencia && transferencia.analisis_completo?.medio_pago_mencionado !== "TRANSFERENCIA") {
+    patrones.push("Prueba 19: 'transferencia' no detectado como medio de pago");
+  }
+
+  const efectivo = resultados.find(r => r.prueba === 20);
+  if (efectivo && efectivo.analisis_completo?.medio_pago_mencionado !== "EFECTIVO") {
+    patrones.push("Prueba 20: 'efectivo' no detectado como medio de pago");
   }
 
   return patrones.length > 0 ? patrones : ["No se detectaron patrones problemáticos significativos"];

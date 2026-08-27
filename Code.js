@@ -1087,7 +1087,13 @@ function verificarSistema() {
     'doPost', 'onOpen', 'procesarConversacion', 'analizarMensaje',
     'buscarCliente', 'construirContextoCliente', 'llamarGemini',
     'guardarConversacion', 'actualizarCliente', 'crearCliente',
-    'getSheet', 'getGeminiKey', 'leerTabla', 'generarId', 'logSistema'
+    'getSheet', 'getGeminiKey', 'leerTabla', 'generarId', 'logSistema',
+    'obtenerContextoComercial', 'leerProductosDisponibles', 'leerEnviosDisponibles',
+    'leerPagosDisponibles', 'leerPromocionesVigentes', 'leerConfigComercial',
+    'calcularPedidoCompleto', 'matchProductos', 'validarStock', 'calcularSubtotal',
+    'calcularEnvio', 'evaluarPromociones', 'calcularTotal', 'normalizarZonaComercial',
+    'actualizarZonaCliente', 'guardarPedido', 'construirRespuestaPedido',
+    'invalidarCacheComercial', 'setupMockDataComercial'
   ];
   
   const faltantes = funcionesCriticas.filter(f => typeof this[f] !== 'function');

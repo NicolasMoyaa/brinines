@@ -55,6 +55,29 @@ function onOpen() {
 
     .addSeparator()
 
+    .addSubMenu(
+      SpreadsheetApp.getUi().createMenu("📦 Catálogo")
+        .addItem("🔄 Cargar Mock Data", "setupMockDataComercial")
+        .addItem("🗑️ Invalidar Caché Comercial", "invalidarCacheComercial")
+    )
+
+    .addSubMenu(
+      SpreadsheetApp.getUi().createMenu("🚚 Envíos")
+        .addItem("Ver zonas configuradas", "verEnviosConfigurados")
+    )
+
+    .addSubMenu(
+      SpreadsheetApp.getUi().createMenu("💳 Pagos")
+        .addItem("Ver medios disponibles", "verPagosDisponibles")
+    )
+
+    .addSubMenu(
+      SpreadsheetApp.getUi().createMenu("🎁 Promociones")
+        .addItem("Ver promociones activas", "verPromocionesActivas")
+    )
+
+    .addSeparator()
+
     .addItem(
       "⚙️ Verificar sistema",
       "verificarSistema"
@@ -1355,4 +1378,32 @@ function guardarResultadosPruebas(resumen) {
   ]]);
 
   Logger.log(`Resultados guardados en hoja "${sheetName}" y resumen en "${resumenSheetName}"`);
+}
+
+function verEnviosConfigurados() {
+  const ctx = obtenerContextoComercial();
+  const lines = ["🚚 ZONAS DE ENVÍO CONFIGURADAS:"];
+  ctx.envios.forEach(e => {
+    lines.push(`${e.zona} | $${e.costo} | ${e.disponible ? "✅" : "❌"} | ${e.tiempo || ""} | Mín gratis: ${e.minimoGratis || "N/A"}`);
+  });
+  SpreadsheetApp.getUi().alert(lines.join("\n"));
+}
+
+function verPagosDisponibles() {
+  const ctx = obtenerContextoComercial();
+  const lines = ["💳 MEDIOS DE PAGO:"];
+  ctx.pagos.forEach(p => {
+    lines.push(`${p.medio} | ${p.disponible ? "✅" : "❌"} | Comisión: ${p.comision}% | ${p.instrucciones || ""}`);
+  });
+  SpreadsheetApp.getUi().alert(lines.join("\n"));
+}
+
+function verPromocionesActivas() {
+  const ctx = obtenerContextoComercial();
+  const lines = ["🎁 PROMOCIONES VIGENTES:"];
+  ctx.promociones.forEach(p => {
+    lines.push(`${p.nombre} | ${p.tipo} | Valor: ${p.valor} | Condición: ${JSON.stringify(p.condicion)}`);
+  });
+  if (ctx.promociones.length === 0) lines.push("(ninguna activa)");
+  SpreadsheetApp.getUi().alert(lines.join("\n"));
 }

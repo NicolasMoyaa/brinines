@@ -271,6 +271,18 @@ function test_Calculator() {
     tests.push({ name: "calcularPedidoCompleto promo porcentual", pass: resultado.descuento_total === 780 && resultado.total === 5200 - 780 });
   } catch (e) { tests.push({ name: "calcularPedidoCompleto promo porcentual", pass: false, error: e.toString() }); }
 
+  tests.push({ name: "normalizarZonaComercial CENTRO", pass: normalizarZonaComercial("CENTRO") === "CENTRO" });
+  tests.push({ name: "normalizarZonaComercial Centro", pass: normalizarZonaComercial("Centro") === "CENTRO" });
+  tests.push({ name: "normalizarZonaComercial FUERA_CENTRO", pass: normalizarZonaComercial("FUERA_CENTRO") === "FUERA_CENTRO" });
+  tests.push({ name: "normalizarZonaComercial Fuera del centro", pass: normalizarZonaComercial("Fuera del centro") === "FUERA_CENTRO" });
+  tests.push({ name: "normalizarZonaComercial Las Talitas", pass: normalizarZonaComercial("Las Talitas") === "OTRA_LAS_TALITAS" });
+  tests.push({ name: "normalizarZonaComercial LAS TALITAS", pass: normalizarZonaComercial("LAS TALITAS") === "OTRA_LAS_TALITAS" });
+  tests.push({ name: "normalizarZonaComercial las-talitas", pass: normalizarZonaComercial("las-talitas") === "OTRA_LAS_TALITAS" });
+  tests.push({ name: "normalizarZonaComercial Yerba Buena", pass: normalizarZonaComercial("Yerba Buena") === "OTRA_YERBA_BUENA" });
+  tests.push({ name: "normalizarZonaComercial Tafí Viejo", pass: normalizarZonaComercial("Tafí Viejo") === "OTRA_TAFI_VIEJO" });
+  tests.push({ name: "normalizarZonaComercial Banda del Río", pass: normalizarZonaComercial("Banda del Río") === "OTRA_BANDA_DEL_RIO" });
+  tests.push({ name: "normalizarZonaComercial con espacios extra", pass: normalizarZonaComercial("  Banda del Río  ") === "OTRA_BANDA_DEL_RIO" });
+
   let allPass = true;
   tests.forEach(t => {
     if (!t.pass) { allPass = false; Logger.log("FAIL: " + t.name + (t.error ? " | " + t.error : "")); }

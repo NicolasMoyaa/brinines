@@ -13,11 +13,30 @@ function buscarCliente(identificador, plataforma) {
 }
 
 function normalizarZona(zona) {
-  if (!zona) return "";
-  const texto = String(zona).trim().toUpperCase();
-  if (texto.includes("FUERA")) return "FUERA_CENTRO";
-  if (texto.includes("CENTRO")) return "CENTRO";
-  return "";
+  return normalizarZonaComercial(zona);
+}
+
+function actualizarZonaCliente(clienteId, zonaTexto) {
+  if (!zonaTexto) return;
+  const zonaNormalizada = normalizarZonaComercial(zonaTexto);
+  const sheet = getSheet(BRININES.sheets.clientes);
+  const values = sheet.getDataRange().getValues();
+  if (values.length < 2) return;
+  const headers = values[0];
+  const idCol = headers.indexOf("Cliente_ID");
+  if (idCol === -1) return;
+  const rowIndex = values.findIndex((row, index) => index > 0 && String(row[idCol]) === String(clienteId));
+  if (rowIndex === -1) return;
+  const rowNumber = rowIndex + 1;
+  const zonaCol = headers.indexOf("Zona_Cliente");
+  if (zonaCol === -1) {
+    const zonaColAlt = headers.indexOf("Zona");
+    if (zonaColAlt !== -1) {
+      sheet.getRange(rowNumber, zonaColAlt + 1).setValue(zonaNormalizada);
+    }
+    return;
+  }
+  sheet.getRange(rowNumber, zonaCol + 1).setValue(zonaNormalizada);
 }
 
 function crearCliente(datos) {

@@ -296,6 +296,14 @@ function procesarConversacion(
 
 
     /*
+     * Actualizar zona del cliente si se detectó una nueva.
+     */
+
+    if (analisis.zona_mencionada) {
+      actualizarZonaCliente(cliente.Cliente_ID, analisis.zona_mencionada);
+    }
+
+    /*
      * Actualizar memoria del cliente (incluye zona normalizada si se detectó).
      */
 
